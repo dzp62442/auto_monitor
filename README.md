@@ -1,5 +1,5 @@
 # auto_monitor
-自用服务器监控工具
+自用服务器监控工具，以及各种训练调试小工具
 
 ## 1 发信功能
 
@@ -68,4 +68,22 @@ systemctl --user enable --now auto_resume
 systemctl --user status auto_resume
 # 查看详细日志
 tail -f auto_resume_*.log
+```
+
+## 3 支持 GPU 同步的计时器
+
+在项目中调用该功能：
+```python
+import os, sys
+sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
+from auto_monitor.timer import Timer
+```
+
+## 4 打印复杂数据结构
+
+在项目中调用该功能：
+```python
+import os, sys
+sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
+from auto_monitor.show_data import show_data
 ```
