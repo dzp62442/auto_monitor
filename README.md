@@ -87,3 +87,12 @@ import os, sys
 sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
 from auto_monitor.show_data import show_data
 ```
+
+## 5 打印网络结构
+
+在项目中调用该功能：
+```python
+import os, sys
+sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
+from auto_monitor.show_model import show_model
+```
