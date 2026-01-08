@@ -79,15 +79,6 @@ def _normalize_text_block(text):
     return "\n".join(lines)
 
 
-def _parse_timeout(value):
-    if not value:
-        return 5
-    try:
-        return float(value)
-    except ValueError as exc:
-        raise ValueError("FEISHU_TIMEOUT 必须是数字") from exc
-
-
 def _extract_error_code(data):
     for key in ("code", "StatusCode", "errcode"):
         if key in data:
@@ -99,7 +90,7 @@ def _load_webhook_config():
     webhook_url = os.getenv("FEISHU_WEBHOOK_URL")
     if not webhook_url:
         raise ValueError("FEISHU_WEBHOOK_URL 未配置")
-    timeout = _parse_timeout(os.getenv("FEISHU_TIMEOUT"))
+    timeout = 5
     return webhook_url, timeout
 
 
@@ -132,16 +123,25 @@ def _build_post_payload(title, body):
 
 
 def send_feishu(title, body):
-    if title is None or str(title).strip() == "":
-        raise ValueError("标题不能为空")
-    if body is None:
-        raise ValueError("正文不能为空")
-    webhook_url, timeout = _load_webhook_config()
-    base_body = baseline()
-    body_text = _normalize_text_block(body)
-    full_body = f"{body_text}\n{base_body}" if body_text else base_body
-    payload = _build_post_payload(str(title), full_body)
-    return _post_message(webhook_url, payload, timeout)
+    try:
+        if title is None or str(title).strip() == "":
+            raise ValueError("标题不能为空")
+        if body is None:
+            raise ValueError("正文不能为空")
+        webhook_url, timeout = _load_webhook_config()
+        if not webhook_url:
+            raise ValueError("FEISHU_WEBHOOK_URL 未配置")
+        base_body = baseline()
+        body_text = _normalize_text_block(body)
+        full_body = f"{body_text}\n{base_body}" if body_text else base_body
+        payload = _build_post_payload(str(title), full_body)
+        if not _post_message(webhook_url, payload, timeout):
+            raise RuntimeError("飞书请求失败")
+        print("飞书发送成功！")
+        return True
+    except Exception as e:
+        print(f"飞书发送失败：{e}")
+        return False
 
 
 if __name__ == "__main__":
@@ -153,5 +153,3 @@ if __name__ == "__main__":
         title = f"服务器 {hostname} 训练发信测试"
         body = f"服务器 {hostname} 已启动！"
         send_feishu(title, body)
-
-        print("飞书消息发送成功！")
