@@ -73,9 +73,9 @@ send_email(subject, body)
 ## 3 飞书机器人推送
 
 1. 飞书创建群组，添加自定义机器人，记录 Webhook 地址
-2. 将 Webhook 地址添加到环境变量：
+2. 创建 `.feishu_env` 文件并写入以下内容：
 ```shell
-export FEISHU_WEBHOOK_URL="https://open.feishu.cn/xxx"
+FEISHU_WEBHOOK_URL=https://open.feishu.cn/xxx
 ```
 3. 运行 `python send_feishu.py` 测试是否成功
 4. 在项目中调用该功能：

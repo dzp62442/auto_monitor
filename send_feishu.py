@@ -6,6 +6,7 @@ import os
 import requests
 import subprocess
 from datetime import datetime
+from dotenv import load_dotenv
 
 
 def get_uptime_minutes():
@@ -87,6 +88,8 @@ def _extract_error_code(data):
 
 
 def _load_webhook_config():
+    home_path = os.environ.get('HOME')
+    load_dotenv(os.path.join(home_path, ".feishu_env"))  # 加载 env 文件
     webhook_url = os.getenv("FEISHU_WEBHOOK_URL")
     if not webhook_url:
         raise ValueError("FEISHU_WEBHOOK_URL 未配置")
