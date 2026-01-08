@@ -1,31 +1,7 @@
 # auto_monitor
 自用服务器监控工具，以及各种训练调试小工具
 
-## 1 发信功能
-
-1. 从对应发信客户端申请 smtp 授权码
-2. 创建 `.smtp_env` 文件并写入以下内容：
-```shell
-from_email=xxx@126.com
-smtp_key=XXXXX
-to_email=xxx@163.com
-```
-3. 运行 `python send_email.py` 测试是否成功
-4. 在项目中调用该功能：
-```python
-import os, sys
-sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
-from auto_monitor.send_email import send_email
-
-subject = f"send_email 功能调用测试"
-body = f"""
-send_email 功能调用测试
-"""
-
-send_email(subject, body)
-```
-
-## 2 通过 systemctl 实现开机自动恢复训练
+## 1 通过 systemctl 实现开机自动恢复训练
 
 1. 拷贝启动脚本 `auto_resume.sh` 到 home 目录：`cp auto_resume.sh ~/`
 2. 创建服务文件
@@ -70,7 +46,51 @@ systemctl --user status auto_resume
 tail -f auto_resume_*.log
 ```
 
-## 3 支持 GPU 同步的计时器
+## 2 发信功能
+
+1. 从对应发信客户端申请 smtp 授权码
+2. 创建 `.smtp_env` 文件并写入以下内容：
+```shell
+from_email=xxx@126.com
+smtp_key=XXXXX
+to_email=xxx@163.com
+```
+3. 运行 `python send_email.py` 测试是否成功
+4. 在项目中调用该功能：
+```python
+import os, sys
+sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
+from auto_monitor.send_email import send_email
+
+subject = f"send_email 功能调用测试"
+body = f"""
+send_email 功能调用测试
+"""
+
+send_email(subject, body)
+```
+
+## 3 飞书机器人推送
+
+1. 飞书创建群组，添加自定义机器人，记录 Webhook 地址
+2. 将 Webhook 地址添加到环境变量：
+```shell
+export FEISHU_WEBHOOK_URL="https://open.feishu.cn/xxx"
+```
+3. 运行 `python send_feishu.py` 测试是否成功
+4. 在项目中调用该功能：
+```python
+import os, sys
+sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
+from auto_monitor.send_feishu import send_feishu
+
+title = f"send_feishu 功能调用测试"
+body = f"send_feishu 功能调用测试"
+
+send_feishu(title, body)
+```
+
+## 4 支持 GPU 同步的计时器
 
 在项目中调用该功能：
 ```python
@@ -79,7 +99,7 @@ sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
 from auto_monitor.timer import Timer
 ```
 
-## 4 打印复杂数据结构
+## 5 打印复杂数据结构
 
 在项目中调用该功能：
 ```python
@@ -88,7 +108,7 @@ sys.path.append(os.path.join(os.environ.get('HOME'), 'Libraries'))
 from auto_monitor.show_data import show_data
 ```
 
-## 5 打印网络结构
+## 6 打印网络结构
 
 在项目中调用该功能：
 ```python
