@@ -4,13 +4,13 @@ import torch
 def show_data(data, indent_level=0):
     """
     递归可视化数据结构
-    
+
     Args:
         data: 要可视化的数据
         indent_level: 当前递归层级，用于缩进显示
     """
     indent = "  " * indent_level  # 根据层级调整缩进
-    
+
     if isinstance(data, dict):
         for key in data.keys():
             print(f"{indent}{key}:")
@@ -24,7 +24,9 @@ def show_data(data, indent_level=0):
         data_type = type(data).__name__
         dtype = str(data.dtype)
         shape = data.shape
-        if hasattr(data, 'max') and hasattr(data, 'min'):
+        is_empty = (data.numel() == 0 if isinstance(data, torch.Tensor)
+                    else data.size == 0)
+        if not is_empty:
             max_val = data.max().item() if hasattr(data.max(), 'item') else data.max()
             min_val = data.min().item() if hasattr(data.min(), 'item') else data.min()
         else:

@@ -79,7 +79,8 @@ class Timer:
             for name in self.times:
                 dt = self.times[name]
                 print('%s=%.4f' % (name, dt), end=' ')
-            print('total=%.4f sec {%.2f FPS}' % (total, 1./total), end=' ')
+            fps = '%.2f' % (1. / total) if total > 0 else 'N/A'
+            print('total=%.4f sec {%s FPS}' % (total, fps), end=' ')
             if self.newline:
                 print(flush=True)
             else:

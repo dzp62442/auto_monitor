@@ -6,6 +6,7 @@ import os
 import requests
 import subprocess
 from datetime import datetime
+from dotenv import load_dotenv
 
 
 def get_uptime_minutes():
@@ -87,9 +88,12 @@ def _extract_error_code(data):
 
 
 def _load_webhook_config():
+    home_path = os.environ.get("HOME")
+    if home_path:
+        load_dotenv(os.path.join(home_path, ".feishu_env"))
     webhook_url = os.getenv("FEISHU_WEBHOOK_URL")
     if not webhook_url:
-        raise ValueError("FEISHU_WEBHOOK_URL 未配置，请先在当前环境中设置或 source 对应 env 文件")
+        raise ValueError("FEISHU_WEBHOOK_URL 未配置，请检查 ~/.feishu_env")
     timeout = 5
     return webhook_url, timeout
 
@@ -146,10 +150,11 @@ def send_feishu(title, body):
 
 if __name__ == "__main__":
     boot_time, uptime_minutes = get_uptime_minutes()
-    print(f"服务器已运行时间: {uptime_minutes:.2f} 分钟")
-
     if uptime_minutes is not None:
+        print(f"服务器已运行时间: {uptime_minutes:.2f} 分钟")
         hostname = subprocess.check_output(["hostname"], text=True).strip()
         title = f"服务器 {hostname} 训练发信测试"
         body = f"服务器 {hostname} 已启动！"
         send_feishu(title, body)
+    else:
+        print("服务器已运行时间: 未知")
