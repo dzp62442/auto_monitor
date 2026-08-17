@@ -7,5 +7,6 @@
 - [飞书机器人推送](send_feishu/README.md)
 - [复杂数据与模型结构打印](show_data_model/README.md)
 - [GPU 同步计时器](timer/README.md)
+- [火山任务状态监控](volc_monitor/README.md)
 
 Python 工具依赖见 `requirements.txt`。将本仓库上级目录加入 `PYTHONPATH` 后，原有导入方式仍然可用。

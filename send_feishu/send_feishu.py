@@ -87,7 +87,12 @@ def _extract_error_code(data):
     return None
 
 
-def _load_webhook_config():
+def _load_webhook_config(webhook_url=None):
+    if webhook_url is not None:
+        normalized = str(webhook_url).strip()
+        if not normalized:
+            raise ValueError("webhook_url 不能为空")
+        return normalized, 5
     home_path = os.environ.get("HOME")
     if home_path:
         load_dotenv(os.path.join(home_path, ".feishu_env"))
@@ -126,13 +131,13 @@ def _build_post_payload(title, body):
     }
 
 
-def send_feishu(title, body):
+def send_feishu(title, body, webhook_url=None):
     try:
         if title is None or str(title).strip() == "":
             raise ValueError("标题不能为空")
         if body is None:
             raise ValueError("正文不能为空")
-        webhook_url, timeout = _load_webhook_config()
+        webhook_url, timeout = _load_webhook_config(webhook_url)
         if not webhook_url:
             raise ValueError("FEISHU_WEBHOOK_URL 未配置")
         base_body = baseline()

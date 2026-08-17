@@ -15,5 +15,5 @@ from auto_monitor.send_feishu.send_feishu import send_feishu
 title = f"send_feishu 功能调用测试"
 body = f"send_feishu 功能调用测试"
 
-send_feishu(title, body)
+send_feishu(title, body)  # 需要使用独立 Webhook 的子项目可显式传入 webhook_url，传入后不会读取 ~/.feishu_env
 ```
