@@ -4,6 +4,7 @@ import argparse
 import fcntl
 import json
 import os
+import random
 import subprocess
 import sys
 import time
@@ -21,6 +22,8 @@ TERMINAL_STATUSES = ("Success", "Failed", "Exception", "Killed")
 ALL_STATUSES = ACTIVE_STATUSES + TERMINAL_STATUSES
 FORCED_HOURS = {9, 12, 15, 18, 21}
 INTERVAL_SECONDS = 15 * 60
+NOTIFICATION_DELAY_MIN_SECONDS = 30
+NOTIFICATION_DELAY_MAX_SECONDS = 90
 RECENT_COUNT = 5
 TIMEZONE = ZoneInfo("Asia/Shanghai")
 
@@ -271,16 +274,17 @@ def check_once(
 ) -> bool:
     """执行一次检查；返回本轮是否需要通知。"""
     checked_at = moment or datetime.now(TIMEZONE)
+    timestamp = checked_at.astimezone(TIMEZONE).strftime("%m-%d %H:%M")
     try:
         snapshot = build_snapshot(query_tasks(task_prefix=task_prefix), task_prefix)
     except Exception as exc:
+        print(f"[{timestamp}] 火山任务查询失败：{exc}", file=sys.stderr, flush=True)
         snapshot = _error_snapshot(exc, task_prefix)
 
     previous = _read_state(state_file)
     if previous is not None and "task_prefix" not in previous:
         previous["task_prefix"] = task_prefix
     reason = _notification_reason(previous, snapshot, checked_at)
-    timestamp = checked_at.astimezone(TIMEZONE).strftime("%m-%d %H:%M")
     if reason is None:
         print(f"[{timestamp}] 状态无变化，本轮不发送。", flush=True)
         return False
@@ -291,6 +295,16 @@ def check_once(
         print(f"[{timestamp}] DRY-RUN：应发送，未调用飞书、未更新状态。", flush=True)
         return True
 
+    notification_delay = random.randint(
+        NOTIFICATION_DELAY_MIN_SECONDS, NOTIFICATION_DELAY_MAX_SECONDS
+    )
+    print(
+        f"[{timestamp}] 查询完成，通知原因：{reason}；"
+        f"随机延迟 {notification_delay} 秒后发送飞书。",
+        flush=True,
+    )
+    time.sleep(notification_delay)
+
     try:
         webhook_url = _load_feishu_webhook()
     except RuntimeError as exc:
@@ -298,7 +312,12 @@ def check_once(
         return True
 
     if not send_feishu("火山任务监控", report, webhook_url=webhook_url):
-        print(f"[{timestamp}] 飞书发送失败，下一个整刻重试。", file=sys.stderr, flush=True)
+        print(
+            f"[{timestamp}] 飞书发送失败，状态未更新；"
+            "状态变化可在下一次查询再次触发，固定播报本轮不补发。",
+            file=sys.stderr,
+            flush=True,
+        )
         return True
 
     try:
