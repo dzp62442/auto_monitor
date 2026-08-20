@@ -32,6 +32,7 @@ DEFAULT_LOCK_FILE = Path.home() / ".local/state/auto_monitor/volc_monitor.lock"
 DEFAULT_FEISHU_ENV_FILE = Path.home() / ".volc_monitor_env"
 FEISHU_WEBHOOK_KEY = "VOLC_MONITOR_FEISHU_WEBHOOK_URL"
 TASK_PREFIX_KEY = "VOLC_MONITOR_TASK_PREFIX"
+FEISHU_BODY_SPACER = "\u200b"
 
 ACTIVE_LABELS = {
     "Initialized": ("⚪", "初始化"),
@@ -226,43 +227,46 @@ def _notification_reason(
 def format_report(snapshot: dict[str, Any], moment: datetime, reason: str) -> str:
     local = moment.astimezone(TIMEZONE) if moment.tzinfo else moment.replace(tzinfo=TIMEZONE)
     time_text = local.strftime("%m-%d %H:%M")
+    lines = [f"{time_text}｜{reason}"]
 
     if snapshot.get("read_status") != "ok":
-        lines = [time_text, "", "⚠️ 状态读取失败", str(snapshot.get("error") or "未知错误")]
+        lines.extend(
+            ["", "【状态读取失败】", "", f"⚠️ {snapshot.get('error') or '未知错误'}"]
+        )
     else:
         active = snapshot.get("active", [])
         recent = snapshot.get("recent", [])
-        lines = [f"{time_text} · 活动任务 {len(active)} 个"]
+        lines.extend(["", "【运行中】"])
 
-        for task in active:
-            icon, label = ACTIVE_LABELS.get(task.get("status"), ("⚪", str(task.get("status"))))
-            lines.extend(
-                [
-                    "",
-                    f"{icon} {task.get('name') or '-'}",
-                    f"状态：{label}",
-                    f"任务 ID：{task.get('id') or '-'}",
-                ]
-            )
         if not active:
-            task_prefix = snapshot.get("task_prefix") or "-"
-            lines.extend(["", f"当前没有排队、调度或运行中的 {task_prefix} 任务。"])
+            lines.extend(["", "无"])
+        for task in active:
+            status = task.get("status")
+            icon, label = ACTIVE_LABELS.get(status, ("⚪", str(status)))
+            status_line = label
+            if status == "Running":
+                status_line = f"{label}｜{_short_time(task.get('start'))}"
+            lines.extend(
+                ["", f"{icon} {task.get('name') or '-'}", status_line, task.get("id") or "-"]
+            )
 
-        lines.extend(["", "近期结束记录："])
+        lines.extend(["", "【近期结束】"])
         if not recent:
-            lines.append("无")
+            lines.extend(["", "无"])
         for task in recent:
             icon, label = TERMINAL_LABELS.get(
                 task.get("status"), ("⚪", str(task.get("status")))
             )
             lines.extend(
                 [
-                    f"{icon} {_short_time(task.get('end'))}  {task.get('name') or '-'} · {label}",
-                    f"   ID：{task.get('id') or '-'}",
+                    "",
+                    f"{icon} {task.get('name') or '-'}",
+                    f"{label}｜{_short_time(task.get('start'))}｜{_short_time(task.get('end'))}",
                 ]
             )
 
-    lines.extend(["", f"通知原因：{reason}"])
+    # send_feishu 会裁掉正文末尾的普通空白行；零宽空格可保留一个视觉空行。
+    lines.append(FEISHU_BODY_SPACER)
     return "\n".join(lines)
 
 
